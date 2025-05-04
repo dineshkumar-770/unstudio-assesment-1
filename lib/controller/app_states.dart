@@ -12,6 +12,8 @@ class AppStates extends Equatable {
   final AllGarmentsDataModel allGarmentsDataModel;
   final Garment selectedTOP;
   final Garment selectedBOTTOM;
+  final bool initializeCameraLoading;
+  final String initializeCameraError;
 
   const AppStates({
     required this.googleSignInLoading,
@@ -22,6 +24,8 @@ class AppStates extends Equatable {
     required this.allGarmentsDataModel,
     required this.selectedTOP,
     required this.selectedBOTTOM,
+    required this.initializeCameraLoading,
+    required this.initializeCameraError,
   });
 
   factory AppStates.initialize() {
@@ -30,6 +34,8 @@ class AppStates extends Equatable {
         capturedSelfies: const [],
         allGaremnetsErrorMsg: "",
         retakeIndex: -1,
+        initializeCameraError: "",
+        initializeCameraLoading: false,
         selectedBOTTOM: Garment(),
         selectedTOP: Garment(),
         allGarmentsDataModel: AllGarmentsDataModel(),
@@ -44,6 +50,10 @@ class AppStates extends Equatable {
       fetchAllGarmentsLoading,
       allGaremnetsErrorMsg,
       allGarmentsDataModel,
+      selectedTOP,
+      selectedBOTTOM,
+      initializeCameraLoading,
+      initializeCameraError,
     ];
   }
 
@@ -56,6 +66,8 @@ class AppStates extends Equatable {
     AllGarmentsDataModel? allGarmentsDataModel,
     Garment? selectedTOP,
     Garment? selectedBOTTOM,
+    bool? initializeCameraLoading,
+    String? initializeCameraError,
   }) {
     return AppStates(
       googleSignInLoading: googleSignInLoading ?? this.googleSignInLoading,
@@ -66,6 +78,8 @@ class AppStates extends Equatable {
       allGarmentsDataModel: allGarmentsDataModel ?? this.allGarmentsDataModel,
       selectedTOP: selectedTOP ?? this.selectedTOP,
       selectedBOTTOM: selectedBOTTOM ?? this.selectedBOTTOM,
+      initializeCameraLoading: initializeCameraLoading ?? this.initializeCameraLoading,
+      initializeCameraError: initializeCameraError ?? this.initializeCameraError,
     );
   }
 }

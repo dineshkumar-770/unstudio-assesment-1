@@ -40,7 +40,7 @@ class PreviewSelfiesView extends StatelessWidget {
                     return Container(
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          image: DecorationImage(image: FileImage(File(previewState.capturedSelfies[index])))),
+                          image: DecorationImage(image: FileImage(File(previewState.capturedSelfies[index])), fit: BoxFit.fill)),
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Align(
@@ -48,11 +48,9 @@ class PreviewSelfiesView extends StatelessWidget {
                           child: InkWell(
                             onTap: () async {
                               Navigator.pop(context);
-                              await Future.delayed(const Duration(milliseconds: 400));
+                              await Future.delayed(const Duration(milliseconds: 200));
                               if (context.mounted) {
-                                ref
-                                    .read(appStateNotifierProvider.notifier)
-                                    .takeSelfies(context: context, retakeIndex: index);
+                                ref.read(appStateNotifierProvider.notifier).updatedRetakeIndex(index);
                               }
                             },
                             child: CircleAvatar(

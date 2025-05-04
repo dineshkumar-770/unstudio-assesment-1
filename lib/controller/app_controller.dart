@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:camera/camera.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,7 @@ class AppStateNotifier extends StateNotifier<AppStates> {
 
   final PermissionService _permissionService = PermissionService();
   final _repositary = locatorDI<ApiCalls>();
+  CameraController? cameraController;
 
   Future<bool> googleSignIN() async {
     try {
@@ -73,6 +75,35 @@ class AppStateNotifier extends StateNotifier<AppStates> {
     }
   }
 
+  Future<void> initializeSelfieCamera() async {
+    state = state.copyWith(initializeCameraLoading: true, initializeCameraError: "");
+    final cameras = await availableCameras();
+    final frontCamera = cameras.firstWhere(
+      (camera) => camera.lensDirection == CameraLensDirection.front,
+    );
+    cameraController = CameraController(frontCamera, ResolutionPreset.high);
+    cameraController?.initialize().then(
+      (value) {
+        if (!mounted) {
+          state = state.copyWith(initializeCameraLoading: false, initializeCameraError: "Error in loading camera");
+          return;
+        }
+        state = state.copyWith(initializeCameraLoading: false, initializeCameraError: "");
+      },
+    ).catchError((e) {
+      if (e is CameraException) {
+        switch (e.code) {
+          case 'CameraAccessDenied':
+            state = state.copyWith(initializeCameraLoading: true, initializeCameraError: e.description.toString());
+            break;
+          default:
+            state = state.copyWith(initializeCameraLoading: true, initializeCameraError: e.description.toString());
+            break;
+        }
+      }
+    });
+  }
+
   void cleanMedia() async {
     // Using this method to dispose of the media held in AppState for better consistency, memory optmization and app state hygiene.
     // The reason is that we don't want AppState to retain media data until the app restarts.
@@ -83,17 +114,19 @@ class AppStateNotifier extends StateNotifier<AppStates> {
     );
   }
 
+  void updatedRetakeIndex(int index) {
+    state = state.copyWith(retakeIndex: index);
+  }
+
   Future<void> takeSelfies({required BuildContext context, required int retakeIndex}) async {
     state = state.copyWith(retakeIndex: retakeIndex);
     List<String> preCapturedSelfies = List.from(state.capturedSelfies);
     final isGranted = await _permissionService.requestCameraPermission(context);
     if (isGranted) {
-      ImagePicker picker = ImagePicker();
-      XFile? capturedFiles =
-          await picker.pickImage(source: ImageSource.camera, preferredCameraDevice: CameraDevice.front);
+      XFile? capturedFiles = await cameraController?.takePicture();
 
       if (capturedFiles != null) {
-        if (retakeIndex != -1) {
+        if (retakeIndex != (-1)) {
           preCapturedSelfies.removeAt(retakeIndex);
           preCapturedSelfies.insert(retakeIndex, capturedFiles.path);
         } else {
@@ -118,8 +151,7 @@ class AppStateNotifier extends StateNotifier<AppStates> {
         AllGarmentsDataModel allGarmentsDataModel = AllGarmentsDataModel();
         try {
           allGarmentsDataModel = AllGarmentsDataModel.fromJson(resp);
-          state = state.copyWith(
-              allGaremnetsErrorMsg: "", allGarmentsDataModel: allGarmentsDataModel, fetchAllGarmentsLoading: false);
+          state = state.copyWith(allGaremnetsErrorMsg: "", allGarmentsDataModel: allGarmentsDataModel, fetchAllGarmentsLoading: false);
         } catch (e) {
           log(e.toString());
           state = state.copyWith(allGaremnetsErrorMsg: e.toString(), fetchAllGarmentsLoading: false);

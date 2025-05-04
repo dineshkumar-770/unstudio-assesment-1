@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -43,42 +42,40 @@ class SelfieView extends ConsumerWidget {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                height: height / 2,
-                width: width / 1.25,
-                decoration: BoxDecoration(
-                    color: AppColors.black,
+              child: OrientationBuilder(builder: (context, orientation) {
+                final bool isPortrait = orientation == Orientation.portrait;
+
+                final containerHeight = isPortrait ? height * 0.5 : height * 0.8;
+                final containerWidth = isPortrait ? width * 0.8 : width * 0.6;
+                return Container(
+                  height: containerHeight,
+                  width: containerWidth,
+                  decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(18),
-                    image: state.capturedSelfies.isEmpty
-                        ? null
-                        : DecorationImage(
-                            image: FileImage(File(state.retakeIndex == -1
-                                ? state.capturedSelfies.last
-                                : state.capturedSelfies[state.retakeIndex])),
-                            fit: BoxFit.fill)),
-                child: Stack(
-                  fit: StackFit.loose,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Align(
-                          alignment: Alignment.bottomRight,
-                          child: Container(
-                            height: 100,
-                            width: 75,
-                            decoration: BoxDecoration(
-                                color: AppColors.backgroundColor, borderRadius: BorderRadius.circular(12)),
-                            child: Center(
-                              child: Text(
-                                state.capturedSelfies.length.toString(),
-                                style: CustomTextStyles.black24W400.copyWith(fontSize: 60),
-                              ),
-                            ),
-                          )),
-                    )
-                  ],
-                ),
-              ),
+                  ),
+                  child: state.initializeCameraLoading
+                      ? Text("Initializing camera")
+                      : CameraPreview(
+                          providerFuncCall.cameraController!,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Align(
+                                alignment: Alignment.bottomRight,
+                                child: Container(
+                                  height: 100,
+                                  width: 75,
+                                  decoration: BoxDecoration(color: AppColors.backgroundColor, borderRadius: BorderRadius.circular(12)),
+                                  child: Center(
+                                    child: Text(
+                                      state.retakeIndex == (-1) ? state.capturedSelfies.length.toString() : state.retakeIndex.toString(),
+                                      style: CustomTextStyles.black24W400.copyWith(fontSize: 60),
+                                    ),
+                                  ),
+                                )),
+                          ),
+                        ),
+                );
+              }),
             ),
             CustomButton(
               icon: FontAwesomeIcons.camera,
